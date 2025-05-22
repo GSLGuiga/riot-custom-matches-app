@@ -16,21 +16,36 @@ HEADERS = {
 
 # Função para buscar o PUUID do jogador pelo nome de invocador
 def get_puuid_by_riot_id(game_name):
+    # Remover a tag # e manter apenas o nome de invocador
+    game_name = game_name.replace('#', '')
+    
     url = f"{PLATFORM_ROUTING}/lol/summoner/v5/summoners/by-name/{game_name}"
 
     try:
         response = requests.get(url, headers=HEADERS)
         
+        # Exibe a resposta completa da API para depuração
+        st.write("Resposta da API:", response.text)
+
         if response.status_code != 200:
             st.error(f"Erro ao buscar PUUID: {response.status_code}")
-            st.error(f"Resposta da API: {response.text}")
             return None
         
+        # Se a resposta estiver OK, convertendo para JSON
         summoner_data = response.json()
+
+        if not summoner_data:
+            st.error("Resposta vazia recebida da API.")
+            return None
+        
         return summoner_data["puuid"]
     
     except requests.exceptions.RequestException as e:
         st.error(f"Erro ao fazer requisição: {e}")
+        return None
+    except ValueError as e:
+        st.error(f"Erro ao processar a resposta JSON: {e}")
+        st.error(f"Conteúdo da resposta: {response.text}")
         return None
 
 # Função para buscar as partidas com base no PUUID
@@ -40,9 +55,11 @@ def get_match_ids_by_puuid(puuid, count=10):
     try:
         response = requests.get(url, headers=HEADERS)
         
+        # Exibe a resposta completa da API para depuração
+        st.write("Resposta da API:", response.text)
+
         if response.status_code != 200:
             st.error(f"Erro ao buscar partidas: {response.status_code}")
-            st.error(f"Resposta da API: {response.text}")
             return []
         
         return response.json()
@@ -58,9 +75,11 @@ def get_match_detail(match_id):
     try:
         response = requests.get(url, headers=HEADERS)
         
+        # Exibe a resposta completa da API para depuração
+        st.write("Resposta da API:", response.text)
+
         if response.status_code != 200:
             st.error(f"Erro ao buscar detalhes da partida: {response.status_code}")
-            st.error(f"Resposta da API: {response.text}")
             return {}
         
         return response.json()
